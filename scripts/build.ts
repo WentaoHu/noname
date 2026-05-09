@@ -1,11 +1,11 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
-spawnSync("pnpm -F noname... build", {
+spawnSync("corepack pnpm -F noname... build", {
 	shell: true,
 	stdio: "inherit",
 });
 
-spawnSync("pnpm -F ./packages/extension/** build", {
+spawnSync("corepack pnpm -F ./packages/extension/** build", {
 	shell: true,
 	stdio: "inherit",
 });
