@@ -49,6 +49,9 @@ export const characterPackMenu = function (connectMenu) {
 			}
 		}
 	});
+	var usesConnectPackConfig = function (mode) {
+		return connectMenu || (mode == "mode_guozhan" && lib.config.mode == "connect");
+	};
 	var updateNodes = function () {
 		for (var i = 0; i < start.firstChild.childNodes.length; i++) {
 			var node = start.firstChild.childNodes[i];
@@ -77,7 +80,7 @@ export const characterPackMenu = function (connectMenu) {
 				if (node.mode == "custom") {
 					continue;
 				}
-				if (connectMenu) {
+				if (usesConnectPackConfig(node.mode)) {
 					if (!lib.config.connect_characters.includes(node.mode)) {
 						node.classList.remove("off");
 						if (node.link) {
@@ -117,7 +120,10 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		// 原逻辑
 		else {
-			if (connectMenu) {
+			if (name == "mode_guozhan" && !usesConnectPackConfig(name)) {
+				return false;
+			}
+			if (usesConnectPackConfig(name)) {
 				if (!bool) {
 					lib.config.connect_characters.add(name);
 				} else {
@@ -240,7 +246,10 @@ export const characterPackMenu = function (connectMenu) {
 					}
 					// 原逻辑
 					else {
-						return connectMenu ? !lib.config.connect_characters.includes(mode) : lib.config.characters.includes(mode);
+						if (mode == "mode_guozhan") {
+							return usesConnectPackConfig(mode) ? !lib.config.connect_characters.includes(mode) : true;
+						}
+						return usesConnectPackConfig(mode) ? !lib.config.connect_characters.includes(mode) : lib.config.characters.includes(mode);
 					}
 				})(),
 				onclick: togglePack,
@@ -256,7 +265,7 @@ export const characterPackMenu = function (connectMenu) {
 					// game.saveConfig("forbidai_user", lib.config.forbidai_user);
 				},
 			});
-			if (!mode.startsWith("mode_")) {
+			if (!mode.startsWith("mode_") || mode == "mode_guozhan") {
 				cfgnodeAI.style.marginTop = "0px";
 				page.appendChild(cfgnode);
 				page.appendChild(cfgnodeAI);
