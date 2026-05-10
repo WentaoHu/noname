@@ -7864,6 +7864,12 @@ ${e instanceof Error ? e.stack : String(e)}`);
 					lib[i][j] = exports[i][j];
 				}
 			}
+			if (exports.characterPack) {
+				for (let i in exports.characterPack) {
+					lib.connectCharacterPack.remove(i);
+					lib.connectCharacterPack.unshift(i);
+				}
+			}
 
 			// var pilecfg=lib.config.customcardpile[get.config('cardpilename')];
 			// if(pilecfg){
