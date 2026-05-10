@@ -147,6 +147,7 @@ export default {
 		hasSkinInGuozhan: true,
 	}),
 	//阴的没边了十头人
+	/*
 	gz_shichangshi: new Character({
 		sex: "male",
 		group: "qun",
@@ -246,6 +247,7 @@ export default {
 		skills: ["gz_miaoyu"],
 		trashBin: ["sex:male_castrated"],
 	}),
+	*/
 	gz_gaolan: new Character({
 		sex: "male",
 		group: "qun",
