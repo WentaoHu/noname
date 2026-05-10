@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "tsx scripts/dev.ts",
+        "dev:lan": "tsx scripts/dev.ts --host=0.0.0.0",
         "build": "tsx scripts/build.ts",
         "init:extension": "tsx scripts/initExtension.ts",
         "serve": "pnpm -F @noname/fs dev --dirname=../../dist",

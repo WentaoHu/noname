@@ -30,6 +30,44 @@ pnpm install
 pnpm dev
 ```
 
+### 局域网访问
+
+如果需要让 iPhone、iPad 等局域网设备通过 Safari 访问这台电脑上的开发服务器，先确认手机和电脑连接在同一个 Wi-Fi 下，然后在电脑上运行：
+
+```bash
+pnpm dev:lan
+```
+
+查看电脑的局域网 IPv4 地址，例如 `192.168.1.159`，然后在 Safari 中打开：
+
+```text
+http://192.168.1.159:8080/
+```
+
+Windows 可以用下面的命令查看 IPv4 地址：
+
+```powershell
+ipconfig
+```
+
+如果 Safari 无法打开页面，请确认：
+
+1. 已经关闭旧的 `pnpm dev` 进程，并重新运行 `pnpm dev:lan`。
+2. Windows 防火墙允许 Node.js 访问“专用网络”。
+3. 手机和电脑在同一个局域网，且路由器没有开启 AP 隔离。
+
+如果还需要局域网联机大厅服务器，另开一个终端运行：
+
+```bash
+pnpm -F @noname/server dev
+```
+
+游戏内服务器地址填写：
+
+```text
+192.168.1.159:8082
+```
+
 ---
 
 贡献代码可阅读相关文档：
