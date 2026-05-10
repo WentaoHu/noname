@@ -1,4 +1,12 @@
 import { spawn } from "node:child_process";
-spawn("pnpm -F @noname/fs dev --debug --dirname=../../apps/core", { shell: true });
-spawn("pnpm -F ./packages/extension/** build:watch", { shell: true });
-spawn("pnpm -F noname dev --open", { shell: true });
+import { execPath } from "node:process";
+
+const pnpmExecPath = process.env.npm_execpath;
+const useCurrentPnpm = pnpmExecPath?.toLowerCase().includes("pnpm");
+const command = useCurrentPnpm ? execPath : "pnpm";
+const baseArgs = useCurrentPnpm && pnpmExecPath ? [pnpmExecPath] : [];
+const options = { stdio: "inherit" } as const;
+
+spawn(command, [...baseArgs, "-F", "@noname/fs", "dev", "--debug", "--dirname=../../apps/core"], options);
+spawn(command, [...baseArgs, "-F", "./packages/extension/**", "build:watch"], options);
+spawn(command, [...baseArgs, "-F", "noname", "dev", "--open"], options);

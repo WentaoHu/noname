@@ -1,14 +1,22 @@
 import { spawnSync } from "node:child_process";
+import { execPath } from "node:process";
 import fs from "node:fs/promises";
-spawnSync("corepack pnpm -F noname... build", {
-	shell: true,
-	stdio: "inherit",
-});
 
-spawnSync("corepack pnpm -F ./packages/extension/** build", {
-	shell: true,
-	stdio: "inherit",
-});
+const pnpmExecPath = process.env.npm_execpath;
+const useCurrentPnpm = pnpmExecPath?.toLowerCase().includes("pnpm");
+const command = useCurrentPnpm ? execPath : "pnpm";
+const baseArgs = useCurrentPnpm && pnpmExecPath ? [pnpmExecPath] : [];
+
+function runPnpm(...args: string[]) {
+	const result = spawnSync(command, [...baseArgs, ...args], {
+		stdio: "inherit",
+	});
+	if (result.error) throw result.error;
+	if (result.status) process.exit(result.status);
+}
+
+runPnpm("-F", "noname...", "build");
+runPnpm("-F", "./packages/extension/**", "build");
 
 console.log("合并打包结果");
 await fs.rm("dist", { recursive: true, force: true });

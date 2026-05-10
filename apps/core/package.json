@@ -19,7 +19,7 @@
         "./package.json": "./package.json"
     },
     "scripts": {
-        "dev": "pnpm vite dev",
+        "dev": "vite dev",
         "build": "tsx scripts/build.ts",
         "build:types": "tsc -p tsconfig.types.json",
         "generateAsset": "tsx scripts/generateAsset.ts",
