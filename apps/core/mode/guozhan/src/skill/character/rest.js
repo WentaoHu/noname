@@ -16538,6 +16538,57 @@ export default {
 			content: "◇你可以弃置此标记，并发动【先驱】标记或【珠联璧合】标记或【阴阳鱼】标记的效果。",
 		},
 	},
+	_guozhan_ai_guess: {
+		mode: ["guozhan"],
+		ruleSkill: true,
+		charlotte: true,
+		silent: true,
+		trigger: {
+			player: "useCardToPlayered",
+			source: "damageSource",
+			global: "recoverAfter",
+		},
+		filter(event, player, name) {
+			const source = name == "recoverAfter" ? event.source : player;
+			if (!source || !source.isIn?.() || !source.isUnseen?.()) {
+				return false;
+			}
+			const target = name == "recoverAfter" ? event.player : event.target || event.player;
+			return target && target != source && !target.isUnseen?.();
+		},
+		content() {
+			const name = event.triggername,
+				source = name == "recoverAfter" ? trigger.source : player,
+				target = name == "recoverAfter" ? trigger.player : trigger.target || trigger.player,
+				group = get.guozhanPublicGroup(source, target);
+			if (!source || !target || group == "unknown") {
+				return;
+			}
+			source.ai ??= {};
+			source.ai.guozhanGroupHint ??= {};
+			let delta = 0;
+			if (name == "damageSource") {
+				delta = -2;
+			} else if (name == "recoverAfter") {
+				delta = 2;
+			} else if (trigger.card) {
+				const cardName = trigger.card.name,
+					type = get.type(trigger.card);
+				if (get.tag(trigger.card, "damage") || ["sha", "juedou", "nanman", "wanjian", "guohe", "shunshou", "lebu", "bingliang"].includes(cardName)) {
+					delta = -1;
+				} else if (get.tag(trigger.card, "recover") || ["tao", "wugu", "yuanjiao"].includes(cardName) || (type == "equip" && target == source)) {
+					delta = 1;
+				}
+			}
+			if (!delta) {
+				return;
+			}
+			source.ai.guozhanGroupHint[group] = (source.ai.guozhanGroupHint[group] || 0) + delta;
+			for (const key of ["wei", "shu", "wu", "qun", "jin", "ye"]) {
+				source.ai.guozhanGroupHint[key] = Math.max(-4, Math.min(4, source.ai.guozhanGroupHint[key] || 0));
+			}
+		},
+	},
 	yexinjia_friend: {
 		marktext: "盟",
 		intro: {

@@ -302,8 +302,164 @@ export class GetGuozhan extends Get {
 			["gz_simayi|gz_xiahoudun"]: 3,
 			// 观星提升锦囊牌质量，集智把普通锦囊转为过牌。
 			["gz_huangyueying|gz_zhugeliang"]: 3,
+			// 屯江/兴祚类过牌配合晋势力的高资源转化。
+			["gz_jin_simayi|gz_jin_zhangchunhua"]: 3,
+			// 族父母子组合，递牌和爆发窗口更稳定。
+			["gz_jin_simazhao|gz_jin_wangyuanji"]: 3,
+			// 灭吴线，承流和转战都依赖持续输出与装备/牌差滚动。
+			["gz_malong|gz_wangjun"]: 3,
+			// 灵梦要求珠联璧合，给小额可见组合收益。
+			["gz_bailingyun|gz_wenyang"]: 2,
+			// 应势借队友出牌，顺服提供额外爆发入口。
+			["gz_new_jin_simayi|gz_simaliang"]: 3,
+			// 伤势过牌配合防御/回复类晋将，低血线更容易屯资源。
+			["gz_new_jin_zhangchunhua|gz_wangxiang"]: 2,
+			// 图射高过牌配合立牧自保，是野心家里最强的单人爆发线。
+			["gz_jsrg_liuyan|gz_yl_yuanshu"]: 3,
+			// 无常收益与利驭输出互相抬高，兼具过牌和杀伤。
+			["gz_pot_weiyan|gz_sb_lvbu"]: 2,
 		};
 		return synergy[pair] || 0;
+	}
+
+	/**
+	 * 获取某名角色在公开信息下可见的武将等级。
+	 *
+	 * @param {Player} player
+	 * @returns {number}
+	 */
+	guozhanVisibleRank(player) {
+		if (!player) {
+			return 0;
+		}
+		let rank = 0,
+			name1,
+			name2;
+		if (!player.isUnseen(0)) {
+			name1 = player.name1;
+			rank += get.guozhanRank(name1, player);
+		}
+		if (!player.isUnseen(1)) {
+			name2 = player.name2;
+			rank += get.guozhanRank(name2, player);
+		}
+		if (name1 && name2) {
+			rank += get.guozhanPairSynergy(name1, name2);
+		}
+		return rank;
+	}
+
+	/**
+	 * 在不透视暗将的前提下获取公开/推测势力。
+	 *
+	 * @param {Player} from
+	 * @param {Player} target
+	 * @returns {string}
+	 */
+	guozhanPublicGroup(from, target) {
+		if (!target) {
+			return "unknown";
+		}
+		if (from == target) {
+			return target.identity != "unknown" ? target.identity : target.getGuozhanGroup(2);
+		}
+		if (!target.isUnseen()) {
+			return target.identity;
+		}
+		const hint = target.ai?.guozhanGroupHint;
+		if (hint) {
+			let best = "unknown",
+				bestScore = 0;
+			for (const group of ["wei", "shu", "wu", "qun", "jin", "ye"]) {
+				const score = hint[group] || 0;
+				if (score > bestScore) {
+					best = group;
+					bestScore = score;
+				}
+			}
+			if (bestScore >= 2) {
+				return best;
+			}
+		}
+		return "unknown";
+	}
+
+	/**
+	 * 获取公开阵营威胁，野心家按三人阵营处理。
+	 *
+	 * @param {Player} from
+	 * @param {string} group
+	 * @returns {number}
+	 */
+	guozhanCampThreat(from, group) {
+		if (!group || group == "unknown") {
+			return 0;
+		}
+		let members = 0,
+			cards = 0;
+		game.countPlayer(current => {
+			if (get.guozhanPublicGroup(from, current) != group) {
+				return false;
+			}
+			members += group == "ye" ? 3 : 1;
+			cards += current.countCards("he");
+			return false;
+		});
+		return members + cards;
+	}
+
+	/**
+	 * 获取公开信息下的单体威胁。
+	 *
+	 * @param {Player} from
+	 * @param {Player} target
+	 * @returns {number}
+	 */
+	guozhanThreat(from, target) {
+		if (!target || target == from) {
+			return 0;
+		}
+		const group = get.guozhanPublicGroup(from, target);
+		let threat = target.countCards("h") + get.guozhanCampThreat(from, group) + get.guozhanVisibleRank(target);
+		if (group == "ye") {
+			threat += 2;
+		}
+		if (target.isUnseen()) {
+			threat = target.countCards("h") + Math.max(0, (target.ai?.shown || 0) * 2);
+			const hint = target.ai?.guozhanGroupHint?.[group] || 0;
+			if (group != "unknown" && hint >= 2) {
+				threat += get.guozhanCampThreat(from, group) * 0.5;
+			}
+		}
+		return threat;
+	}
+
+	/**
+	 * 获取集火优先级。
+	 *
+	 * @param {Player} from
+	 * @param {Player} target
+	 * @returns {number}
+	 */
+	guozhanFocusScore(from, target) {
+		if (!target || target == from) {
+			return 0;
+		}
+		let score = get.guozhanThreat(from, target);
+		if (from.canUse && from.canUse("sha", target, false)) {
+			score += 2;
+		}
+		game.countPlayer(current => {
+			if (current == from || current == target || get.guozhanPublicGroup(from, current) != get.guozhanPublicGroup(from, from)) {
+				return false;
+			}
+			if (current.canUse && current.canUse("sha", target, false)) {
+				score += 1;
+			}
+			return false;
+		});
+		score += Math.max(0, 5 - target.countCards("h")) * 0.2;
+		return score;
 	}
 
 	/**
@@ -343,15 +499,12 @@ export class GetGuozhan extends Get {
 	 */
 	realAttitude(from, to, difficulty, toidentity) {
 		var getIdentity = function (player) {
-			if (player.isUnseen()) {
-				if (!player.wontYe()) {
-					return "ye";
-				}
-				return player.getGuozhanGroup(0);
-			}
-			return player.identity;
+			return get.guozhanPublicGroup(from, player);
 		};
 		var fid = getIdentity(from);
+		if (toidentity == "unknown") {
+			return 0;
+		}
 		if (fid == toidentity && toidentity != "ye") {
 			return 4 + difficulty;
 		}
@@ -366,12 +519,13 @@ export class GetGuozhan extends Get {
 			pmap = _status.connectMode ? lib.playerOL : game.playerMap,
 			player;
 		for (var i of game.players) {
-			if (i.identity == "unknown") {
+			const identity = getIdentity(i);
+			if (identity == "unknown") {
 				continue;
 			}
 			var added = false;
 			for (var j of sides) {
-				if (i.isFriendOf(pmap[j])) {
+				if ((identity == getIdentity(pmap[j]) && identity != "ye") || (!i.isUnseen() && !pmap[j].isUnseen() && i.isFriendOf(pmap[j]))) {
 					added = true;
 					map[j].push(i);
 					if (i == this) {
@@ -397,18 +551,20 @@ export class GetGuozhan extends Get {
 			return -3;
 		}
 		var from_p;
-		if (from.identity == "unknown" && from.wontYe()) {
-			from_p = get.population(fid);
+		if (fid == "unknown") {
+			from_p = 0;
+		} else if (fid == "ye") {
+			from_p = 3;
 		} else {
 			from_p = game.countPlayer(function (current) {
-				return current.isFriendOf(from);
+				return getIdentity(current) == fid;
 			}, true);
 		}
 		var to_p = game.countPlayer(function (current) {
-			return current.isFriendOf(to);
+			return getIdentity(current) == toidentity;
 		}, true);
-		if (to.identity == "ye") {
-			to_p += 1.5;
+		if (toidentity == "ye") {
+			to_p += 2;
 		}
 
 		if (to_p >= max) {
@@ -438,13 +594,7 @@ export class GetGuozhan extends Get {
 	 */
 	rawAttitude(from, to) {
 		var getIdentity = function (player) {
-			if (player.isUnseen()) {
-				if (!player.wontYe()) {
-					return "ye";
-				}
-				return player.getGuozhanGroup(0);
-			}
-			return player.identity;
+			return get.guozhanPublicGroup(from, player);
 		};
 		var fid = getIdentity(from),
 			tid = getIdentity(to);
@@ -461,17 +611,21 @@ export class GetGuozhan extends Get {
 		if (from == to) {
 			return 5 + difficulty;
 		}
-		if (from.isFriendOf(to)) {
+		if (!to.isUnseen() && from.isFriendOf(to)) {
 			return 5 + difficulty;
 		}
-		if (from.identity == "unknown" && fid == to.identity) {
-			if (from.wontYe()) {
-				return 4 + difficulty;
-			}
+		if (fid != "unknown" && fid == tid && fid != "ye") {
+			return 5 + difficulty;
 		}
 		var att = get.realAttitude(from, to, difficulty, tid);
+		if (att < 0) {
+			att -= Math.min(3, get.guozhanFocusScore(from, to) / 10);
+		}
 		if (from.storage.zhibi && from.storage.zhibi.includes(to)) {
 			return att;
+		}
+		if (tid == "unknown") {
+			return Math.min(0, Math.random() - 0.6) + difficulty;
 		}
 		if (to.ai.shown >= 0.5) {
 			return att * to.ai.shown;
