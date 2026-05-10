@@ -513,7 +513,7 @@ export const characterPackMenu = function (connectMenu) {
 			return;
 		}
 		// 显示不是无名杀自带的武将包
-		if (!lib.connectCharacterPack.includes(packName) && !lib.config.all.characters.includes(packName)) {
+		if (!lib.config.all.characters.includes(packName)) {
 			createModeConfig(packName, start.firstChild, packName == "mode_guozhan" ? start.firstChild.firstChild : node1);
 			if (connectMenu) {
 				lib.connectCharacterPack.add(packName);
