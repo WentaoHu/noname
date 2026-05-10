@@ -1920,6 +1920,51 @@ export class Game {
 			func.apply(this, args);
 		}
 	}
+	restartOnlineRoom() {
+		if (_status.connectMode) {
+			if (game.online) {
+				if (game.onlinezhu) {
+					game.send("restartRoom");
+				} else {
+					alert("只有房主可以重来");
+				}
+				return;
+			}
+			game.broadcastAll(function (roomId) {
+				if (ui.exit) {
+					ui.exit.stay = true;
+					ui.exit.firstChild.innerHTML = "返回房间";
+				}
+				if (typeof roomId == "string") {
+					if (game.online) {
+						game.saveConfig("tmp_user_roomId", roomId);
+					} else {
+						game.saveConfig("tmp_owner_roomId", roomId);
+					}
+				}
+				setTimeout(game.reload, 100);
+			}, game.roomId);
+			return;
+		}
+		game.reload();
+	}
+	exitOnlineRoom() {
+		if (_status.connectMode) {
+			game.saveConfig("tmp_owner_roomId");
+			game.saveConfig("tmp_user_roomId");
+			game.saveConfig("reconnect_info");
+			if (game.online) {
+				if (game.ws) {
+					game.ws.close();
+				}
+			} else {
+				game.broadcast("selfclose");
+			}
+			game.reload();
+			return;
+		}
+		game.reload();
+	}
 	syncState() {
 		let state = null;
 		if (game.getState) {
@@ -4919,10 +4964,16 @@ ${e instanceof Error ? e.stack : String(e)}`);
 			}
 			_status.reloading = true;
 		}
-		if (_status.video && !_status.replayvideo) {
-			localStorage.removeItem(lib.configprefix + "playbackmode");
+		try {
+			if (typeof localStorage != "undefined" && localStorage) {
+				if (_status.video && !_status.replayvideo) {
+					localStorage.removeItem(lib.configprefix + "playbackmode");
+				}
+				localStorage.setItem("show_splash_off", true);
+			}
+		} catch {
+			// localStorage may be unavailable in some embedded webviews.
 		}
-		localStorage.setItem("show_splash_off", true);
 		if (lib.status.reload) {
 			_status.waitingToReload = true;
 		} else {
@@ -4954,8 +5005,18 @@ ${e instanceof Error ? e.stack : String(e)}`);
 		}
 		game.saveConfig("continue_name", names);
 		game.saveConfig("mode", lib.config.mode);
-		localStorage.setItem(lib.configprefix + "directstart", "true");
+		game.setDirectStart();
 		game.reload();
+	}
+	setDirectStart() {
+		try {
+			if (typeof localStorage != "undefined" && localStorage) {
+				localStorage.setItem(lib.configprefix + "directstart", "true");
+			}
+		} catch {
+			return false;
+		}
+		return true;
 	}
 	/**
 	 * @param { Function } func
@@ -7144,7 +7205,7 @@ ${e instanceof Error ? e.stack : String(e)}`);
 					}
 					game.saveConfig("continue_name_boss", map);
 					game.saveConfig("mode", lib.config.mode);
-					localStorage.setItem(lib.configprefix + "directstart", true);
+					game.setDirectStart();
 					game.reload();
 				});
 			} else if (lib.config.mode == "versus") {
@@ -7156,7 +7217,7 @@ ${e instanceof Error ? e.stack : String(e)}`);
 							color: _status.color,
 						});
 						game.saveConfig("mode", lib.config.mode);
-						localStorage.setItem(lib.configprefix + "directstart", true);
+						game.setDirectStart();
 						game.reload();
 					});
 				}
@@ -7165,17 +7226,8 @@ ${e instanceof Error ? e.stack : String(e)}`);
 			}
 		}
 		if (!ui.restart) {
-			if (game.onlineroom && typeof game.roomId == "string") {
-				ui.restart = ui.create.control("restart", function () {
-					game.broadcastAll(function () {
-						if (ui.exit) {
-							ui.exit.stay = true;
-							ui.exit.firstChild.innerHTML = "返回房间";
-						}
-					});
-					game.saveConfig("tmp_owner_roomId", game.roomId);
-					setTimeout(game.reload, 100);
-				});
+			if (_status.connectMode) {
+				ui.restart = ui.create.control("restart", game.restartOnlineRoom);
 			} else {
 				ui.restart = ui.create.control("restart", game.reload);
 			}
@@ -7852,6 +7904,12 @@ ${e instanceof Error ? e.stack : String(e)}`);
 				}
 				for (let j in exports[i]) {
 					lib[i][j] = exports[i][j];
+				}
+			}
+			if (exports.characterPack) {
+				for (let i in exports.characterPack) {
+					lib.connectCharacterPack.remove(i);
+					lib.connectCharacterPack.unshift(i);
 				}
 			}
 

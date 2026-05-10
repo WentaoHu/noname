@@ -54,6 +54,7 @@ window.noname_package = {
 	},
 	mode: {
 		guozhan: "国战",
+		connect: "联机",
 	},
 	submode: {
 		guozhan: {

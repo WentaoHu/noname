@@ -583,16 +583,10 @@ export class Click {
 				game.saveConfig("reconnect_info");
 			}
 		}
-		if (!ui.exit || !ui.exit.stay) {
-			if (lib.config.reconnect_info) {
-				lib.config.reconnect_info.length = 1;
-				game.saveConfig("reconnect_info", lib.config.reconnect_info);
-			}
-			game.saveConfig("tmp_user_roomId", undefined, false, function () {
-				game.reload();
-			});
-		} else {
+		if (ui.exit && ui.exit.stay) {
 			game.reload();
+		} else {
+			game.exitOnlineRoom();
 		}
 	}
 	shortcut(show) {
@@ -955,7 +949,7 @@ export class Click {
 				div.link = thismode;
 				div.addEventListener(lib.config.touchscreen ? "touchend" : "click", function () {
 					game.saveConfig("mode", this.link);
-					localStorage.setItem(lib.configprefix + "directstart", true);
+					game.setDirectStart();
 					game.reload();
 				});
 			}

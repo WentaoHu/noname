@@ -414,6 +414,14 @@ ${(e instanceof Error ? e.stack : String(e))}`);
  */
 export function loadMode(mode: importModeConfig) {
 	mixinLibrary(mode, lib);
+	if (mode.characterPack) {
+		for (const name in mode.characterPack) {
+			// @ts-expect-error ignore
+			lib.connectCharacterPack.remove(name);
+			// @ts-expect-error ignore
+			lib.connectCharacterPack.unshift(name);
+		}
+	}
 	mixinGeneral(mode, "game", game);
 	mixinGeneral(mode, "ui", ui);
 	mixinGeneral(mode, "get", get);

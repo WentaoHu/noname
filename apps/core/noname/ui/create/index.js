@@ -2468,7 +2468,7 @@ export class Create {
 			lib.config.touchscreen ? "touchend" : "click",
 			() => {
 				if (!ui.backgroundMusic.played.length && lib.config.background_music != "music_off" && !isNaN(ui.backgroundMusic.duration)) {
-					ui.backgroundMusic.play();
+					Promise.resolve(ui.backgroundMusic.play()).catch(() => void 0);
 				}
 			},
 			{ once: true }
@@ -2658,7 +2658,7 @@ export class Create {
 		ui.system1 = ui.create.div("#system1", ui.system);
 		ui.system2 = ui.create.div("#system2", ui.system);
 
-		ui.replay = ui.create.system("重来", game.reload, true);
+		ui.replay = ui.create.system("重来", game.restartOnlineRoom, true);
 		ui.replay.id = "restartbutton";
 		ui.config2 = ui.create.system("选项", ui.click.config);
 		ui.pause = ui.create.system("暂停", ui.click.pause);
@@ -3070,8 +3070,8 @@ export class Create {
 		ui.create.div(ui.shortcut, function (e) {
 			e.stopPropagation();
 		});
-		ui.create.div(".menubutton.round", "<span>重来</span>", ui.shortcut, game.reload).dataset.position = 1;
-		ui.create.div(".menubutton.round", "<span>退出</span>", ui.shortcut, game.exit).dataset.position = 3;
+		ui.create.div(".menubutton.round", "<span>重来</span>", ui.shortcut, game.restartOnlineRoom).dataset.position = 1;
+		ui.create.div(".menubutton.round", "<span>退出</span>", ui.shortcut, game.exitOnlineRoom).dataset.position = 3;
 		ui.create.div(".menubutton.round", "<span>记录</span>", ui.shortcut, ui.click.pause).dataset.position = 4;
 		ui.shortcut.autobutton = ui.create.div(".menubutton.round", "<span>托管</span>", ui.shortcut, ui.click.auto);
 		ui.shortcut.autobutton.dataset.position = 2;
@@ -3721,10 +3721,7 @@ export class Create {
 					if (game.onlinezhu) {
 						game.send("startGame");
 					} else {
-						game.saveConfig("tmp_owner_roomId");
-						game.saveConfig("tmp_user_roomId");
-						game.saveConfig("reconnect_info");
-						game.reload();
+						game.exitOnlineRoom();
 					}
 				} else {
 					var num = 0;

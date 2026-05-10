@@ -49,6 +49,9 @@ export const characterPackMenu = function (connectMenu) {
 			}
 		}
 	});
+	var usesConnectPackConfig = function (mode) {
+		return connectMenu || (mode == "mode_guozhan" && lib.config.mode == "connect");
+	};
 	var updateNodes = function () {
 		for (var i = 0; i < start.firstChild.childNodes.length; i++) {
 			var node = start.firstChild.childNodes[i];
@@ -77,7 +80,7 @@ export const characterPackMenu = function (connectMenu) {
 				if (node.mode == "custom") {
 					continue;
 				}
-				if (connectMenu) {
+				if (usesConnectPackConfig(node.mode)) {
 					if (!lib.config.connect_characters.includes(node.mode)) {
 						node.classList.remove("off");
 						if (node.link) {
@@ -117,7 +120,10 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		// 原逻辑
 		else {
-			if (connectMenu) {
+			if (name == "mode_guozhan" && !usesConnectPackConfig(name)) {
+				return false;
+			}
+			if (usesConnectPackConfig(name)) {
 				if (!bool) {
 					lib.config.connect_characters.add(name);
 				} else {
@@ -134,6 +140,55 @@ export const characterPackMenu = function (connectMenu) {
 			}
 		}
 		updateNodes();
+	};
+
+	var getCharacterList = function () {
+		var list = (connectMenu ? lib.connectCharacterPack : lib.config.all.characters).slice(0);
+		if (lib.characterPack.mode_guozhan) {
+			list.remove("mode_guozhan");
+			list.unshift("mode_guozhan");
+		}
+		return list;
+	};
+	var loadConnectModeCharacterPacks = function () {
+		if (!connectMenu && lib.config.mode != "connect") {
+			return;
+		}
+		Object.keys(lib.mode).forEach(mode => {
+			if (!lib.mode[mode].connect || !lib.config.all.mode.includes(mode) || lib.characterPack["mode_" + mode]) {
+				return;
+			}
+			game.loadModeAsync(mode, modeConfig => {
+				if (modeConfig.translate) {
+					Object.assign(lib.translate, modeConfig.translate);
+				}
+				if (modeConfig.characterSort) {
+					Object.assign(lib.characterSort, modeConfig.characterSort);
+				}
+				if (modeConfig.characterPack) {
+					for (var packName in modeConfig.characterPack) {
+						lib.connectCharacterPack.remove(packName);
+						lib.connectCharacterPack.unshift(packName);
+						lib.characterPack[packName] = modeConfig.characterPack[packName];
+						for (var characterName in modeConfig.characterPack[packName]) {
+							lib.character[characterName] = lib.character[characterName] || modeConfig.characterPack[packName][characterName];
+						}
+					}
+				}
+			});
+		});
+	};
+	var getBannedConfigName = function (packMode) {
+		if (connectMenu) {
+			var activeMode = cacheMenux.pages[0].firstChild.querySelector(".active");
+			if (activeMode && activeMode.mode) {
+				return "connect_" + activeMode.mode + "_banned";
+			}
+		} else if (packMode == "mode_guozhan" && lib.config.mode == "connect") {
+			return "connect_guozhan_banned";
+		} else if (!_status.connectMode) {
+			return get.mode() + "_banned";
+		}
 	};
 
 	var createModeConfig = function (mode, position, position2) {
@@ -191,7 +246,10 @@ export const characterPackMenu = function (connectMenu) {
 					}
 					// 原逻辑
 					else {
-						return connectMenu ? !lib.config.connect_characters.includes(mode) : lib.config.characters.includes(mode);
+						if (mode == "mode_guozhan") {
+							return usesConnectPackConfig(mode) ? !lib.config.connect_characters.includes(mode) : true;
+						}
+						return usesConnectPackConfig(mode) ? !lib.config.connect_characters.includes(mode) : lib.config.characters.includes(mode);
 					}
 				})(),
 				onclick: togglePack,
@@ -207,7 +265,7 @@ export const characterPackMenu = function (connectMenu) {
 					// game.saveConfig("forbidai_user", lib.config.forbidai_user);
 				},
 			});
-			if (!mode.startsWith("mode_")) {
+			if (!mode.startsWith("mode_") || mode == "mode_guozhan") {
 				cfgnodeAI.style.marginTop = "0px";
 				page.appendChild(cfgnode);
 				page.appendChild(cfgnodeAI);
@@ -248,15 +306,8 @@ export const characterPackMenu = function (connectMenu) {
 				delete this._banning;
 			};
 			var updateBanned = function () {
-				var _list;
-				if (connectMenu) {
-					var mode = cacheMenux.pages[0].firstChild.querySelector(".active");
-					if (mode && mode.mode) {
-						_list = lib.config["connect_" + mode.mode + "_banned"];
-					}
-				} else {
-					_list = lib.config[get.mode() + "_banned"];
-				}
+				var bannedConfigName = getBannedConfigName(mode);
+				var _list = bannedConfigName && lib.config[bannedConfigName];
 				if (_list && _list.includes(this.link)) {
 					this.classList.add("banned");
 				} else {
@@ -265,13 +316,9 @@ export const characterPackMenu = function (connectMenu) {
 			};
 			if (lib.characterSort[mode]) {
 				var listb = [];
-				if (!connectMenu) {
-					listb = lib.config[get.mode() + "_banned"] || [];
-				} else {
-					var modex = cacheMenux.pages[0].firstChild.querySelector(".active");
-					if (modex && modex.mode) {
-						listb = lib.config["connect_" + modex.mode + "_banned"];
-					}
+				var bannedConfigName = getBannedConfigName(mode);
+				if (bannedConfigName) {
+					listb = lib.config[bannedConfigName] || [];
 				}
 				for (var pak in lib.characterSort[mode]) {
 					var info = lib.characterSort[mode][pak];
@@ -294,16 +341,11 @@ export const characterPackMenu = function (connectMenu) {
 							init: boolx,
 							onclick(bool) {
 								var banned = [];
-								if (connectMenu) {
-									var modex = cacheMenux.pages[0].firstChild.querySelector(".active");
-									if (modex && modex.mode) {
-										banned = lib.config["connect_" + modex.mode + "_banned"];
-									}
-								} else if (_status.connectMode) {
+								var bannedConfigName = getBannedConfigName(mode);
+								if (!bannedConfigName) {
 									return;
-								} else {
-									banned = lib.config[get.mode() + "_banned"] || [];
 								}
+								banned = lib.config[bannedConfigName] || [];
 								var listx = lib.characterSort[mode][this._link.config._name];
 								if (bool) {
 									for (var i = 0; i < listx.length; i++) {
@@ -314,7 +356,7 @@ export const characterPackMenu = function (connectMenu) {
 										banned.add(listx[i]);
 									}
 								}
-								game.saveConfig(connectMenu ? "connect_" + modex.mode + "_banned" : get.mode() + "_banned", banned);
+								game.saveConfig(bannedConfigName, banned);
 								updateActive();
 							},
 						};
@@ -435,7 +477,8 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		delete lib.characterPack.mode_banned;
 	}
-	var characterlist = connectMenu ? lib.connectCharacterPack : lib.config.all.characters;
+	loadConnectModeCharacterPacks();
+	var characterlist = getCharacterList();
 	for (var i = 0; i < characterlist.length; i++) {
 		createModeConfig(characterlist[i], start.firstChild);
 	}
@@ -504,8 +547,8 @@ export const characterPackMenu = function (connectMenu) {
 			return;
 		}
 		// 显示不是无名杀自带的武将包
-		if (!lib.connectCharacterPack.includes(packName) && !lib.config.all.characters.includes(packName)) {
-			createModeConfig(packName, start.firstChild, node1);
+		if (!lib.config.all.characters.includes(packName)) {
+			createModeConfig(packName, start.firstChild, packName == "mode_guozhan" ? start.firstChild.firstChild : node1);
 			if (connectMenu) {
 				lib.connectCharacterPack.add(packName);
 			}
