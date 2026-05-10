@@ -12744,7 +12744,7 @@ export class Library {
 							try {
 								var roomId = text.split("\n")[1].match(/\d+/);
 								var caption = ui.rooms.find(caption => caption.key == roomId);
-								if (caption && (_status.read_clipboard_text || confirm(`是否通过复制的内容加入${roomId}房间？`))) {
+								if (caption) {
 									ui.click.connectroom.call(caption);
 									delete _status.read_clipboard_text;
 								}
@@ -12771,12 +12771,6 @@ export class Library {
 								ui.window.removeChild(input);
 								if (result || input.value.length > 0) {
 									read(input.value);
-								} else if (confirm("是否输入邀请链接以加入房间？")) {
-									game.prompt("请输入邀请链接", text => {
-										if (typeof text === "string" && text.length > 0) {
-											read(text);
-										}
-									});
 								}
 							}
 						}
