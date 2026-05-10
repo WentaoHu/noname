@@ -55,15 +55,23 @@ export default () => {
 				node.style.textAlign = "center";
 				node.style.overflow = "hidden";
 
+				var resolveConnectAddress = function (ip) {
+					var address = (ip || "").trim();
+					if (address.toLowerCase() == "local") {
+						address = (location.hostname || "localhost") + ":8082";
+					}
+					return address;
+				};
 				var connect = function (e) {
 					event.textnode.textContent = "正在连接...";
 					clearTimeout(event.timeout);
 					if (e) {
 						e.preventDefault();
 					}
-					const ip = node.textContent;
+					const input = node.textContent;
+					const ip = resolveConnectAddress(input);
 					game.requireSandboxOn(ip);
-					game.saveConfig("last_ip", ip);
+					game.saveConfig("last_ip", input);
 					game.connect(ip, function (success) {
 						if (success) {
 							var info = lib.config.reconnect_info;
@@ -153,20 +161,19 @@ export default () => {
 					220
 				);
 				if (get.config("read_clipboard", "connect")) {
-					var ced = false;
 					var read = text => {
 						try {
 							var text2 = text.split("\n")[2];
-							var ip = text2.slice(5);
-							if (ip.length > 0 && text2.startsWith("联机地址:") && (ced || confirm("是否根据剪贴板的邀请链接以进入联机地址和房间？"))) {
-								node.innerHTML = ip;
-								event.textnode.innerHTML = "正在连接...";
+							var ip = resolveConnectAddress(text2.slice(5));
+							if (ip.length > 0 && text2.startsWith("联机地址:")) {
+								node.textContent = ip;
+								event.textnode.textContent = "正在连接...";
 								clearTimeout(event.timeout);
-								game.saveConfig("last_ip", node.innerHTML);
-								game.connect(node.innerHTML, function (success) {
+								game.saveConfig("last_ip", ip);
+								game.connect(ip, function (success) {
 									if (!success && event.textnode) {
 										alert("邀请链接解析失败");
-										event.textnode.innerHTML = "输入联机地址";
+										event.textnode.textContent = "输入联机地址";
 									}
 									if (success) {
 										_status.read_clipboard_text = text;
@@ -191,13 +198,6 @@ export default () => {
 						ui.window.removeChild(input);
 						if (result || input.value.length > 0) {
 							read(input.value);
-						} else if (confirm("是否输入邀请链接以进入联机地址和房间？")) {
-							ced = true;
-							game.prompt("请输入邀请链接", text => {
-								if (typeof text === "string" && text.length > 0) {
-									read(text);
-								}
-							});
 						}
 					}
 				}
