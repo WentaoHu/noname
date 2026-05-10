@@ -178,6 +178,133 @@ export class GetGuozhan extends Get {
 	}
 
 	/**
+	 * 判断两个国战武将能否组成一组。
+	 *
+	 * @param {string} name1
+	 * @param {string} name2
+	 * @returns {boolean}
+	 */
+	guozhanCanChoosePair(name1, name2) {
+		// @ts-expect-error 祖宗之法就是这么写的
+		if (_status.separatism) {
+			return true;
+		}
+		const group1 = lib.character[name1][1];
+		const group2 = lib.character[name2][1];
+		// @ts-expect-error 祖宗之法就是这么写的
+		const doublex = get.is.double(name1, true);
+		if (doublex) {
+			// @ts-expect-error 祖宗之法就是这么写的
+			const double = get.is.double(name2, true);
+			if (double) {
+				return doublex.some(group => double.includes(group));
+			}
+			return doublex.includes(group2) || lib.selectGroup.includes(group2);
+		}
+		if (group1 == "ye" || lib.selectGroup.includes(group1)) {
+			return group2 != "ye";
+		}
+		// @ts-expect-error 祖宗之法就是这么写的
+		const double = get.is.double(name2, true);
+		if (double) {
+			return double.includes(group1);
+		}
+		return group1 == group2 || lib.selectGroup.includes(group2);
+	}
+
+	/**
+	 * 获取国战武将组合的主副将顺序。
+	 *
+	 * @param {string} name1
+	 * @param {string} name2
+	 * @returns {[string, string] | null}
+	 */
+	guozhanGetOrderedPair(name1, name2) {
+		if (!get.guozhanCanChoosePair(name1, name2) && !get.guozhanCanChoosePair(name2, name1)) {
+			return null;
+		}
+		let mainx = name1,
+			vicex = name2;
+		if (!get.guozhanCanChoosePair(mainx, vicex) || (get.guozhanCanChoosePair(vicex, mainx) && get.guozhanReverse(mainx, vicex))) {
+			mainx = name2;
+			vicex = name1;
+		}
+		return [mainx, vicex];
+	}
+
+	/**
+	 * 计算国战武将组合的选将分。
+	 *
+	 * @param {string} mainx
+	 * @param {string} vicex
+	 * @param {Player} [player]
+	 * @returns {number}
+	 */
+	guozhanChoiceScore(mainx, vicex, player) {
+		const mainRank = get.guozhanRank(mainx, player);
+		const viceRank = get.guozhanRank(vicex, player);
+		let score = mainRank * 1.1 + viceRank + get.guozhanPairSynergy(mainx, vicex);
+		const mainDouble = get.is.double(mainx, true);
+		const viceDouble = get.is.double(vicex, true);
+		const mainGroup = lib.character[mainx][1];
+		const viceGroup = lib.character[vicex][1];
+		if (mainDouble && viceDouble && mainDouble.some(group => viceDouble.includes(group))) {
+			score += 0.4;
+		} else if (mainDouble && mainDouble.includes(viceGroup)) {
+			score += 0.3;
+		} else if (viceDouble && viceDouble.includes(mainGroup)) {
+			score += 0.3;
+		} else if (mainGroup == viceGroup && mainGroup != "ye" && !lib.selectGroup.includes(mainGroup)) {
+			score += 0.2;
+		}
+		return score;
+	}
+
+	/**
+	 * 获取国战武将组合的技能联动加分。
+	 *
+	 * @param {string} name1
+	 * @param {string} name2
+	 * @returns {number}
+	 */
+	guozhanPairSynergy(name1, name2) {
+		const pair = [name1, name2].sort().join("|");
+		const synergy = {
+			// 鬼才黑牌改判配合洛神获得黑色判定牌，能把改判成本转化为过牌收益。
+			["gz_simayi|gz_zhenji"]: 5,
+			// 咆哮需要稳定杀来源，武圣能把红牌大量转化为杀。
+			["gz_guanyu|gz_zhangfei"]: 7,
+		};
+		return synergy[pair] || 0;
+	}
+
+	/**
+	 * 从候选列表中选择评分最高的国战武将组合。
+	 *
+	 * @param {string[]} list
+	 * @param {Player} [player]
+	 * @returns {[string, string] | null}
+	 */
+	guozhanBestChoice(list, player) {
+		let best = null,
+			bestScore = -Infinity;
+		for (let i = 0; i < list.length - 1; i++) {
+			for (let j = i + 1; j < list.length; j++) {
+				const pair = get.guozhanGetOrderedPair(list[i], list[j]);
+				if (!pair) {
+					continue;
+				}
+				const score = get.guozhanChoiceScore(pair[0], pair[1], player);
+				if (score > bestScore) {
+					best = pair;
+					bestScore = score;
+				}
+			}
+		}
+		return best;
+	}
+
+	/**
 	 * > ?.??
 	 *
 	 * @param {Player} from
