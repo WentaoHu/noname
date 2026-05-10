@@ -172,6 +172,18 @@ export const characterPackMenu = function (connectMenu) {
 			});
 		});
 	};
+	var getBannedConfigName = function (packMode) {
+		if (connectMenu) {
+			var activeMode = cacheMenux.pages[0].firstChild.querySelector(".active");
+			if (activeMode && activeMode.mode) {
+				return "connect_" + activeMode.mode + "_banned";
+			}
+		} else if (packMode == "mode_guozhan" && lib.config.mode == "connect") {
+			return "connect_guozhan_banned";
+		} else if (!_status.connectMode) {
+			return get.mode() + "_banned";
+		}
+	};
 
 	var createModeConfig = function (mode, position, position2) {
 		var _info = lib.characterPack[mode];
@@ -285,15 +297,8 @@ export const characterPackMenu = function (connectMenu) {
 				delete this._banning;
 			};
 			var updateBanned = function () {
-				var _list;
-				if (connectMenu) {
-					var mode = cacheMenux.pages[0].firstChild.querySelector(".active");
-					if (mode && mode.mode) {
-						_list = lib.config["connect_" + mode.mode + "_banned"];
-					}
-				} else {
-					_list = lib.config[get.mode() + "_banned"];
-				}
+				var bannedConfigName = getBannedConfigName(mode);
+				var _list = bannedConfigName && lib.config[bannedConfigName];
 				if (_list && _list.includes(this.link)) {
 					this.classList.add("banned");
 				} else {
@@ -302,13 +307,9 @@ export const characterPackMenu = function (connectMenu) {
 			};
 			if (lib.characterSort[mode]) {
 				var listb = [];
-				if (!connectMenu) {
-					listb = lib.config[get.mode() + "_banned"] || [];
-				} else {
-					var modex = cacheMenux.pages[0].firstChild.querySelector(".active");
-					if (modex && modex.mode) {
-						listb = lib.config["connect_" + modex.mode + "_banned"];
-					}
+				var bannedConfigName = getBannedConfigName(mode);
+				if (bannedConfigName) {
+					listb = lib.config[bannedConfigName] || [];
 				}
 				for (var pak in lib.characterSort[mode]) {
 					var info = lib.characterSort[mode][pak];
@@ -331,16 +332,11 @@ export const characterPackMenu = function (connectMenu) {
 							init: boolx,
 							onclick(bool) {
 								var banned = [];
-								if (connectMenu) {
-									var modex = cacheMenux.pages[0].firstChild.querySelector(".active");
-									if (modex && modex.mode) {
-										banned = lib.config["connect_" + modex.mode + "_banned"];
-									}
-								} else if (_status.connectMode) {
+								var bannedConfigName = getBannedConfigName(mode);
+								if (!bannedConfigName) {
 									return;
-								} else {
-									banned = lib.config[get.mode() + "_banned"] || [];
 								}
+								banned = lib.config[bannedConfigName] || [];
 								var listx = lib.characterSort[mode][this._link.config._name];
 								if (bool) {
 									for (var i = 0; i < listx.length; i++) {
@@ -351,7 +347,7 @@ export const characterPackMenu = function (connectMenu) {
 										banned.add(listx[i]);
 									}
 								}
-								game.saveConfig(connectMenu ? "connect_" + modex.mode + "_banned" : get.mode() + "_banned", banned);
+								game.saveConfig(bannedConfigName, banned);
 								updateActive();
 							},
 						};
