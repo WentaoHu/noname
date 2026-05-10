@@ -87,10 +87,12 @@
 			"guozhan"
 		],
 		"sgsmodes": [
-			"guozhan"
+			"guozhan",
+			"connect"
 		],
 		"stockmode": [
-			"guozhan"
+			"guozhan",
+			"connect"
 		],
 		"stockextension": [
 			"boss",
@@ -199,7 +201,7 @@
 	"show_volumn": true,
 	"show_cardpile": true,
 	"only_fullskin": true,
-	"show_connect": false,
+	"show_connect": true,
 	"show_wuxie": false,
 	"show_wuxie_self": true,
 	"show_stat": true,
@@ -312,7 +314,8 @@
 			"difficulty": "normal",
 			"initshow_draw": "mark",
 			"dierestart": true
-		}
+		},
+		"connect": {}
 	},
 	"current_mode": {},
 	"customforbid": [],
@@ -482,5 +485,6 @@
 			"dcruyi",
 			"cxliushi"
 		]
-	]
+	],
+	"connect_mode": "guozhan"
 }
