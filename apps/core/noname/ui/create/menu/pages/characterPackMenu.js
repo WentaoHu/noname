@@ -144,6 +144,34 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		return list;
 	};
+	var loadConnectModeCharacterPacks = function () {
+		if (!connectMenu && lib.config.mode != "connect") {
+			return;
+		}
+		Object.keys(lib.mode).forEach(mode => {
+			if (!lib.mode[mode].connect || !lib.config.all.mode.includes(mode) || lib.characterPack["mode_" + mode]) {
+				return;
+			}
+			game.loadModeAsync(mode, modeConfig => {
+				if (modeConfig.translate) {
+					Object.assign(lib.translate, modeConfig.translate);
+				}
+				if (modeConfig.characterSort) {
+					Object.assign(lib.characterSort, modeConfig.characterSort);
+				}
+				if (modeConfig.characterPack) {
+					for (var packName in modeConfig.characterPack) {
+						lib.connectCharacterPack.remove(packName);
+						lib.connectCharacterPack.unshift(packName);
+						lib.characterPack[packName] = modeConfig.characterPack[packName];
+						for (var characterName in modeConfig.characterPack[packName]) {
+							lib.character[characterName] = lib.character[characterName] || modeConfig.characterPack[packName][characterName];
+						}
+					}
+				}
+			});
+		});
+	};
 
 	var createModeConfig = function (mode, position, position2) {
 		var _info = lib.characterPack[mode];
@@ -444,6 +472,7 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		delete lib.characterPack.mode_banned;
 	}
+	loadConnectModeCharacterPacks();
 	var characterlist = getCharacterList();
 	for (var i = 0; i < characterlist.length; i++) {
 		createModeConfig(characterlist[i], start.firstChild);
