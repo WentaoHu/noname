@@ -136,6 +136,15 @@ export const characterPackMenu = function (connectMenu) {
 		updateNodes();
 	};
 
+	var getCharacterList = function () {
+		var list = (connectMenu ? lib.connectCharacterPack : lib.config.all.characters).slice(0);
+		if (lib.characterPack.mode_guozhan) {
+			list.remove("mode_guozhan");
+			list.unshift("mode_guozhan");
+		}
+		return list;
+	};
+
 	var createModeConfig = function (mode, position, position2) {
 		var _info = lib.characterPack[mode];
 		var page = ui.create.div("");
@@ -435,7 +444,7 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		delete lib.characterPack.mode_banned;
 	}
-	var characterlist = connectMenu ? lib.connectCharacterPack : lib.config.all.characters;
+	var characterlist = getCharacterList();
 	for (var i = 0; i < characterlist.length; i++) {
 		createModeConfig(characterlist[i], start.firstChild);
 	}
@@ -505,7 +514,7 @@ export const characterPackMenu = function (connectMenu) {
 		}
 		// 显示不是无名杀自带的武将包
 		if (!lib.connectCharacterPack.includes(packName) && !lib.config.all.characters.includes(packName)) {
-			createModeConfig(packName, start.firstChild, node1);
+			createModeConfig(packName, start.firstChild, packName == "mode_guozhan" ? start.firstChild.firstChild : node1);
 			if (connectMenu) {
 				lib.connectCharacterPack.add(packName);
 			}
