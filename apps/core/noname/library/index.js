@@ -12213,6 +12213,14 @@ export class Library {
 			/**
 			 * @this {import("./element/client.js").Client}
 			 */
+			restartRoom() {
+				if (this.id == game.onlinezhu) {
+					game.restartOnlineRoom();
+				}
+			},
+			/**
+			 * @this {import("./element/client.js").Client}
+			 */
 			changeRoomConfig(config) {
 				if (this.id == game.onlinezhu) {
 					game.broadcastAll(function (config) {
