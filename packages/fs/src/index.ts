@@ -26,6 +26,7 @@ const failedJson = <T = any>(code: number, message?: string): JsonResult<T> => (
 
 export const defaultConfig = {
 	server: false,
+	host: "127.0.0.1",
 	port: 8089,
 	debug: false,
 	dirname: cwd(),
@@ -199,7 +200,7 @@ export default function createApp(config: Partial<typeof defaultConfig> = {}) {
 	});
 
 	const callback = () => {
-		console.log(`Server listening on port ${cfg.port}`);
+		console.log(`Server listening on ${cfg.host}:${cfg.port}`);
 		if (!cfg.server && !cfg.debug) exec(`start http://localhost:${cfg.port}/`);
 	};
 
@@ -216,7 +217,7 @@ export default function createApp(config: Partial<typeof defaultConfig> = {}) {
 	// } else {
 	// 	app.listen(config.port, callback);
 	// }
-	app.listen({ port: cfg.port }, callback);
+	app.listen({ host: cfg.host, port: cfg.port }, callback);
 
 	return app;
 }
