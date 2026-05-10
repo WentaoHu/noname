@@ -572,18 +572,6 @@ export default {
 		skills: ["gzbiaozhao", "gzyechou"],
 		doubleGroup: ["wu", "qun"],
 	}),
-	// 神谷爱凌
-	gz_key_ushio: new Character({
-		sex: "female",
-		group: "key",
-		hp: 3,
-		maxHp: 3,
-		//hujia: 999,
-		skills: ["ushio_huanxin", "ushio_xilv"],
-		// 就你势力多
-		doubleGroup: ["key", "wei", "shu", "wu", "qun", "jin"],
-	}),
-
 	gz_wangling: new Character({
 		sex: "male",
 		group: "wei",

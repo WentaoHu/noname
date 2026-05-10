@@ -860,59 +860,13 @@ export const chooseCharacterOLContent = async (event, _trigger, _player) => {
 	function chooseCharacterCheck() {
 		// @ts-expect-error 祖宗之法就是这么写的
 		const buttons = _status.event.dialog.buttons;
-
-		const filterChoice = (name1, name2) => {
-			// @ts-expect-error 祖宗之法就是这么写的
-			if (_status.separatism) {
-				return true;
-			}
-			const group1 = lib.character[name1][1];
-			const group2 = lib.character[name2][1];
-			// @ts-expect-error 祖宗之法就是这么写的
-			const doublex = get.is.double(name1, true);
-			if (doublex) {
-				// @ts-expect-error 祖宗之法就是这么写的
-				const double = get.is.double(name2, true);
-				// @ts-expect-error 祖宗之法就是这么写的
-				if (double) {
-					return doublex.some(group => double.includes(group));
-				}
-				// @ts-expect-error 祖宗之法就是这么写的
-				return doublex.includes(group2) || lib.selectGroup.includes(group2);
-			} else {
-				if (group1 === "ye" || lib.selectGroup.includes(group1)) {
-					return group2 !== "ye";
-				}
-				// @ts-expect-error 祖宗之法就是这么写的
-				const double = get.is.double(name2, true);
-				// @ts-expect-error 祖宗之法就是这么写的
-				if (double) {
-					return double.includes(group1);
-				}
-				return group1 === group2 || lib.selectGroup.includes(group2);
-			}
-		};
-
-		for (let i = 0; i < buttons.length - 1; ++i) {
-			const button1 = buttons[i];
-			for (let j = i + 1; j < buttons.length; ++j) {
-				const button2 = buttons[j];
-
-				if (filterChoice(button1.link, button2.link) || filterChoice(button2.link, button1.link)) {
-					let mainx = button1.link;
-					let vicex = button2.link;
-
-					if (!filterChoice(mainx, vicex) || (filterChoice(vicex, mainx) && get.guozhanReverse(mainx, vicex))) {
-						mainx = button2.link;
-						vicex = button1.link;
-					}
-					const list = [mainx, vicex];
-					return {
-						bool: true,
-						links: list,
-					};
-				}
-			}
+		const list = buttons.map(button => button.link);
+		const pair = get.guozhanBestChoice(list, _status.event.player);
+		if (pair) {
+			return {
+				bool: true,
+				links: pair,
+			};
 		}
 	}
 };
