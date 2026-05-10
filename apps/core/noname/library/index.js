@@ -10680,7 +10680,7 @@ export class Library {
 					if ((game.servermode || game.onlinehall) && _status.over) {
 						void 0;
 					} else {
-						localStorage.setItem(lib.configprefix + "directstart", true);
+						game.setDirectStart();
 						game.reload();
 					}
 				} else {

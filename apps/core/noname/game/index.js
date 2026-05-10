@@ -4954,8 +4954,18 @@ ${e instanceof Error ? e.stack : String(e)}`);
 		}
 		game.saveConfig("continue_name", names);
 		game.saveConfig("mode", lib.config.mode);
-		localStorage.setItem(lib.configprefix + "directstart", "true");
+		game.setDirectStart();
 		game.reload();
+	}
+	setDirectStart() {
+		try {
+			if (typeof localStorage != "undefined" && localStorage) {
+				localStorage.setItem(lib.configprefix + "directstart", "true");
+			}
+		} catch {
+			return false;
+		}
+		return true;
 	}
 	/**
 	 * @param { Function } func
@@ -7144,7 +7154,7 @@ ${e instanceof Error ? e.stack : String(e)}`);
 					}
 					game.saveConfig("continue_name_boss", map);
 					game.saveConfig("mode", lib.config.mode);
-					localStorage.setItem(lib.configprefix + "directstart", true);
+					game.setDirectStart();
 					game.reload();
 				});
 			} else if (lib.config.mode == "versus") {
@@ -7156,7 +7166,7 @@ ${e instanceof Error ? e.stack : String(e)}`);
 							color: _status.color,
 						});
 						game.saveConfig("mode", lib.config.mode);
-						localStorage.setItem(lib.configprefix + "directstart", true);
+						game.setDirectStart();
 						game.reload();
 					});
 				}

@@ -955,7 +955,7 @@ export class Click {
 				div.link = thismode;
 				div.addEventListener(lib.config.touchscreen ? "touchend" : "click", function () {
 					game.saveConfig("mode", this.link);
-					localStorage.setItem(lib.configprefix + "directstart", true);
+					game.setDirectStart();
 					game.reload();
 				});
 			}
