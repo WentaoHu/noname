@@ -272,8 +272,36 @@ export class GetGuozhan extends Get {
 		const synergy = {
 			// 鬼才黑牌改判配合洛神获得黑色判定牌，能把改判成本转化为过牌收益。
 			["gz_simayi|gz_zhenji"]: 5,
+			// 天妒可回收洛神停止时的红色判定牌，降低洛神判定损耗。
+			["gz_guojia|gz_zhenji"]: 4,
 			// 咆哮需要稳定杀来源，武圣能把红牌大量转化为杀。
 			["gz_guanyu|gz_zhangfei"]: 7,
+			// 龙胆把闪转为杀，补足咆哮的杀来源。
+			["gz_zhangfei|gz_zhaoyun"]: 5,
+			// 纳蛮回收打出的杀，咆哮能把杀资源转化为爆发。
+			["gz_maliang|gz_zhangfei"]: 4,
+			// 枭姬和旋略都吃失去装备，勇进能主动制造装备流转。
+			["gz_lingtong|gz_sunshangxiang"]: 5,
+			// 调度推动装备使用和转移，枭姬吃装备离区收益。
+			["gz_lvfan|gz_sunshangxiang"]: 5,
+			// 甘露交换装备可以主动触发枭姬过牌。
+			["gz_sunshangxiang|gz_wuguotai"]: 4,
+			// 甘露制造装备离区，旋略转化为拆牌控制。
+			["gz_lingtong|gz_wuguotai"]: 3,
+			// 双卖血收益，受伤后兼具拿伤害牌和遗计分牌。
+			["gz_caocao|gz_guojia"]: 4,
+			// 奸雄配节命，受伤后既能回收资源又能补手牌上限。
+			["gz_caocao|gz_xunyu"]: 4,
+			// 放逐和遗计都吃受伤触发，兼具过牌和翻面节奏。
+			["gz_caopi|gz_guojia"]: 4,
+			// 放逐配节命，受伤后能补手牌并控制敌方节奏。
+			["gz_caopi|gz_xunyu"]: 4,
+			// 鬼才可辅助屯田判定，提升攒田稳定性。
+			["gz_dengai|gz_simayi"]: 3,
+			// 鬼才可控制刚烈判定，按局面选择伤害或弃牌。
+			["gz_simayi|gz_xiahoudun"]: 3,
+			// 观星提升锦囊牌质量，集智把普通锦囊转为过牌。
+			["gz_huangyueying|gz_zhugeliang"]: 3,
 		};
 		return synergy[pair] || 0;
 	}
