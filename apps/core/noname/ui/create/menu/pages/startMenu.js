@@ -82,7 +82,7 @@ export const startMenu = function (connectMenu) {
 						game.send("server", "create", game.onlineKey, get.connectNickname(), lib.config.connect_avatar);
 					}
 				} else {
-					localStorage.setItem(lib.configprefix + "directstart", true);
+					game.setDirectStart();
 					game.saveConfig("directstartmode", active.mode);
 					game.saveConfig("mode", "connect");
 					ui.exitroom = ui.create.system(
@@ -99,7 +99,7 @@ export const startMenu = function (connectMenu) {
 				clickContainer.call(cacheMenuContainer, connectMenu);
 			} else {
 				game.saveConfig("mode", active.mode);
-				localStorage.setItem(lib.configprefix + "directstart", true);
+				game.setDirectStart();
 				game.reload();
 			}
 		}
