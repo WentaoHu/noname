@@ -53,43 +53,12 @@ window.noname_package = {
 		coin: "富甲天下",
 	},
 	mode: {
-		identity: "身份",
 		guozhan: "国战",
-		versus: "对决",
-		connect: "联机",
-		boss: "挑战",
-		doudizhu: "斗地主",
-		single: "单挑",
-		chess: "战棋",
-		tafang: "塔防",
-		stone: "炉石",
-		brawl: "乱斗",
 	},
 	submode: {
-		identity: {
-			normal: "身份模式",
-			zhong: "忠胆英杰",
-			purple: "3v3v2",
-		},
 		guozhan: {
 			normal: "国战模式",
 			mingjiang: "明将国战",
-		},
-		versus: {
-			four: "四人对抗",
-			three: "统率三军",
-			two: "欢乐成双",
-			jiange: "守卫剑阁",
-			siguo: "四国争霸",
-			standard: "自由对决",
-		},
-		chess: {
-			combat: "战棋模式",
-			three: "战棋统率",
-			leader: "战棋君主",
-		},
-		single: {
-			normal: "新1v1",
 		},
 	},
 	background: {
