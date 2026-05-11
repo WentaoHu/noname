@@ -185,6 +185,7 @@ export class GameGuozhan extends Game {
 			num = { mark: "标记", draw: "摸牌" }[lib.configOL.initshow_draw];
 		}
 		uiintro.add('<div class="text chat">群雄割据：' + (lib.configOL.separatism ? "开启" : "关闭"));
+		uiintro.add('<div class="text chat">势力禁用：' + (lib.configOL.banGroup ? "开启" : "关闭"));
 		uiintro.add('<div class="text chat">首亮奖励：' + num);
 		uiintro.add('<div class="text chat">珠联璧合：' + (lib.configOL.zhulian ? "开启" : "关闭"));
 		uiintro.add('<div class="text chat">出牌时限：' + lib.configOL.choose_timeout + "秒");

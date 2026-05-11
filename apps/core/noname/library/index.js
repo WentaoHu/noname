@@ -6636,6 +6636,9 @@ export class Library {
 				get connect_separatism() {
 					return lib.mode.guozhan.config.separatism;
 				},
+				get connect_banGroup() {
+					return lib.mode.guozhan.config.banGroup;
+				},
 				get connect_shenInGuozhan() {
 					return lib.mode.guozhan.config.shenInGuozhan;
 				},

@@ -62,6 +62,9 @@ export const start = async (event, trigger, player) => {
 			_status.separatism = true;
 		}
 
+		delete _status.bannedGroup;
+		delete _status.guozhanYexinjiaPool;
+
 		// 决定当前模式下的牌堆
 		switch (_status.mode) {
 			case "old":
@@ -129,6 +132,12 @@ export const start = async (event, trigger, player) => {
 			// @ts-expect-error 祖宗之法就是这么写的
 			_status.separatism
 		);
+
+		const groups = ["wei", "shu", "wu", "qun", "jin"];
+		if (lib.configOL.banGroup && groups.length && get.guozhanHasJinPool()) {
+			await applyGuozhanBanGroup(event, groups.randomGet());
+		}
+		get.guozhanYexinjiaPool();
 
 		await game.randomMapOL();
 	} else {
@@ -202,40 +211,8 @@ export const start = async (event, trigger, player) => {
 		const chosen = lib.config.continue_name || [];
 		delete _status.bannedGroup;
 		delete _status.guozhanYexinjiaPool;
-		if (get.config("banGroup") && groups?.length && !chosen?.length && get.guozhanHasJinPool()) {
-			const group = groups.randomGet();
-			event.videoId = lib.status.videoId++;
-			let createDialog = function (group, id) {
-				_status.bannedGroup = group;
-				var dialog = ui.create.dialog(`本局禁用势力：${get.translation(group)}`, [[["", "", group]], "vcard"], "forcebutton");
-				dialog.videoId = id;
-			};
-			game.log("本局", `<span data-nature=${get.groupnature(group, "raw")}m>${get.translation(group)}势力</span>`, "遭到了禁用");
-			game.broadcastAll(createDialog, `group_${group}`, event.videoId);
-			for (const character in lib.character) {
-				const info = get.character(character);
-				if (info?.doubleGroup?.includes(group)) {
-					info.doubleGroup.remove(group);
-					if (info.group == group && info.doubleGroup?.length) {
-						info.group = info.doubleGroup[0];
-					}
-					if (info.doubleGroup.length == 1) {
-						info.doubleGroup = [];
-					}
-				}
-				if (info.group == group && !get.is.double(character, true)) {
-					info.isUnseen = true;
-				}
-				game.broadcast(
-					(name, info) => {
-						lib.character[name] = info;
-					},
-					character,
-					info
-				);
-			}
-			await game.delay(5);
-			game.broadcastAll("closeDialog", event.videoId);
+		if (get.config("banGroup") && groups.length && !chosen.length && get.guozhanHasJinPool()) {
+			await applyGuozhanBanGroup(event, groups.randomGet());
 		}
 		get.guozhanYexinjiaPool();
 
@@ -314,6 +291,42 @@ export const start = async (event, trigger, player) => {
 	}
 
 	await game.phaseLoop(playerFirst);
+};
+
+const applyGuozhanBanGroup = async (event, group) => {
+	const groupCard = `group_${group}`;
+	event.videoId = lib.status.videoId++;
+	let createDialog = function (groupCard, id) {
+		_status.bannedGroup = groupCard;
+		var dialog = ui.create.dialog(`本局禁用势力：${get.translation(groupCard)}`, [[["", "", groupCard]], "vcard"], "forcebutton");
+		dialog.videoId = id;
+	};
+	game.log("本局", `<span data-nature=${get.groupnature(group, "raw")}m>${get.translation(group)}势力</span>`, "遭到了禁用");
+	game.broadcastAll(createDialog, groupCard, event.videoId);
+	for (const character in lib.character) {
+		const info = get.character(character);
+		if (info?.doubleGroup?.includes(group)) {
+			info.doubleGroup.remove(group);
+			if (info.group == group && info.doubleGroup?.length) {
+				info.group = info.doubleGroup[0];
+			}
+			if (info.doubleGroup.length == 1) {
+				info.doubleGroup = [];
+			}
+		}
+		if (info.group == group && !get.is.double(character, true)) {
+			info.isUnseen = true;
+		}
+		game.broadcast(
+			(name, info) => {
+				lib.character[name] = info;
+			},
+			character,
+			info
+		);
+	}
+	await game.delay(5);
+	game.broadcastAll("closeDialog", event.videoId);
 };
 
 export const startBefore = () => {
