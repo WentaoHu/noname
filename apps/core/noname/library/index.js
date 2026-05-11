@@ -6735,10 +6735,10 @@ export class Library {
 				},
 				banGroup: {
 					name: "势力禁用",
-					init: false,
+					init: true,
 					frequent: true,
 					restart: true,
-					intro: "选将前将随机禁用一个势力",
+					intro: "有晋时随机禁用一个势力",
 				},
 				shenInGuozhan: {
 					name: "神武将选择势力",

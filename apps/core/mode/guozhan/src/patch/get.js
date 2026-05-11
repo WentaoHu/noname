@@ -323,6 +323,113 @@ export class GetGuozhan extends Get {
 	}
 
 	/**
+	 * 获取本局禁用势力。
+	 *
+	 * @returns {string | null}
+	 */
+	guozhanBannedGroup() {
+		const group = _status.bannedGroup?.slice(6);
+		return ["wei", "shu", "wu", "qun", "jin"].includes(group) ? group : null;
+	}
+
+	/**
+	 * 判断国战可用将池中是否存在晋势力武将。
+	 *
+	 * @returns {boolean}
+	 */
+	guozhanHasJinPool() {
+		const banned = _status.connectMode ? lib.configOL.banned || [] : lib.config.guozhan_banned || [];
+		for (const name in lib.characterPack.mode_guozhan) {
+			const info = lib.characterPack.mode_guozhan[name];
+			if (!info || name.indexOf("gz_shibing") == 0 || get.is.jun(name) || banned.includes(name) || lib.filter.characterDisabled(name)) {
+				continue;
+			}
+			if (info.group == "jin" || info.doubleGroup?.includes("jin")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 获取本局随机保留的野心家。
+	 *
+	 * @returns {string[]}
+	 */
+	guozhanYexinjiaPool() {
+		if (_status.guozhanYexinjiaPool) {
+			return _status.guozhanYexinjiaPool;
+		}
+		const sort = lib.characterSort?.mode_guozhan?.guozhan_yexinjia;
+		if (!sort?.length) {
+			_status.guozhanYexinjiaPool = [];
+			return _status.guozhanYexinjiaPool;
+		}
+		const banned = _status.connectMode ? lib.configOL.banned || [] : lib.config.guozhan_banned || [];
+		_status.guozhanYexinjiaPool = sort
+			.filter(name => lib.character[name] && !banned.includes(name) && !lib.filter.characterDisabled(name))
+			.randomGets(2);
+		return _status.guozhanYexinjiaPool;
+	}
+
+	/**
+	 * 判断武将是否被本局禁势力或野心家限量规则排除。
+	 *
+	 * @param {string} name
+	 * @returns {boolean}
+	 */
+	guozhanIsBannedChoice(name) {
+		const info = lib.character[name];
+		if (!info) {
+			return true;
+		}
+		const banned = _status.connectMode ? lib.configOL.banned || [] : lib.config.guozhan_banned || [];
+		if (banned.includes(name)) {
+			return true;
+		}
+		if (info.group == "ye" && !get.guozhanYexinjiaPool().includes(name)) {
+			return true;
+		}
+		const bannedGroup = get.guozhanBannedGroup();
+		if (!bannedGroup) {
+			return false;
+		}
+		const double = get.is.double(name, true);
+		if (double) {
+			return double.every(group => group == bannedGroup);
+		}
+		return info.group == bannedGroup;
+	}
+
+	/**
+	 * 准备本局选将池。
+	 *
+	 * @param {string[]} list
+	 * @returns {string[]}
+	 */
+	guozhanPrepareChoicePool(list) {
+		return list.filter(name => !get.guozhanIsBannedChoice(name));
+	}
+
+	/**
+	 * 获取选将界面的本局规则提示。
+	 *
+	 * @returns {string[]}
+	 */
+	guozhanChoiceHint() {
+		const hints = [];
+		const bannedGroup = get.guozhanBannedGroup();
+		if (bannedGroup) {
+			hints.push(`本局禁用势力：${get.translation(bannedGroup)}`);
+		}
+		const yexinjiaPool = get.guozhanYexinjiaPool();
+		if (yexinjiaPool.length) {
+			hints.push(`可用野心家${yexinjiaPool.length}人：${yexinjiaPool.map(name => get.translation(name)).join("，")}`);
+		}
+		return hints;
+	}
+
+	/**
 	 * 获取某名角色在公开信息下可见的武将等级。
 	 *
 	 * @param {Player} player
