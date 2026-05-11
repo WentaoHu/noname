@@ -200,7 +200,9 @@ export const start = async (event, trigger, player) => {
 
 		const groups = ["wei", "shu", "wu", "qun", "jin"];
 		const chosen = lib.config.continue_name || [];
-		if (get.config("banGroup") && groups?.length && !chosen?.length) {
+		delete _status.bannedGroup;
+		delete _status.guozhanYexinjiaPool;
+		if (get.config("banGroup") && groups?.length && !chosen?.length && get.guozhanHasJinPool()) {
 			const group = groups.randomGet();
 			event.videoId = lib.status.videoId++;
 			let createDialog = function (group, id) {
@@ -221,7 +223,7 @@ export const start = async (event, trigger, player) => {
 						info.doubleGroup = [];
 					}
 				}
-				if (info.group == group) {
+				if (info.group == group && !get.is.double(character, true)) {
 					info.isUnseen = true;
 				}
 				game.broadcast(
@@ -235,6 +237,7 @@ export const start = async (event, trigger, player) => {
 			await game.delay(5);
 			game.broadcastAll("closeDialog", event.videoId);
 		}
+		get.guozhanYexinjiaPool();
 
 		if (_status.brawl && _status.brawl.chooseCharacterBefore) {
 			await _status.brawl.chooseCharacterBefore();

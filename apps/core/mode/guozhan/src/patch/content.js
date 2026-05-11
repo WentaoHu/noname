@@ -61,6 +61,8 @@ export const chooseCharacterContent = async (event, _trigger, _player) => {
 	if (_status.brawl && _status.brawl.chooseCharacterFilter) {
 		characterList = _status.brawl.chooseCharacterFilter(characterList);
 	}
+	characterList = get.guozhanPrepareChoicePool(characterList);
+	Reflect.set(_status, "characterlist", characterList.slice(0));
 
 	characterList.randomSort();
 
@@ -321,6 +323,7 @@ export const chooseCharacterContent = async (event, _trigger, _player) => {
 
 	function createChooseCharacterDialog() {
 		const dialog = ui.create.dialog("选择角色", "hidden", [chooseList, "character"]);
+		addChoiceHint(dialog);
 
 		// 如果是乱斗模式，添加额外的设置
 		if (!_status.brawl || !_status.brawl.noAddSetting) {
@@ -444,6 +447,23 @@ export const chooseCharacterContent = async (event, _trigger, _player) => {
 		}
 	}
 
+	function addChoiceHint(dialog) {
+		const hints = get.guozhanChoiceHint();
+		if (!hints.length) {
+			return;
+		}
+		const node = ui.create.div(".text.center");
+		node.style.width = "100%";
+		node.style.margin = "0 0 8px";
+		node.innerHTML = hints.join("<br>");
+		const caption = dialog.content.querySelector(".caption");
+		if (caption?.nextSibling) {
+			dialog.content.insertBefore(node, caption.nextSibling);
+		} else {
+			dialog.content.insertBefore(node, dialog.content.firstChild);
+		}
+	}
+
 	function createCharacterDialog() {
 		const dialogxx = ui.create.characterDialog(
 			"heightset",
@@ -458,6 +478,9 @@ export const chooseCharacterContent = async (event, _trigger, _player) => {
 					if (get.is.jun(i)) {
 						return true;
 					}
+				}
+				if (get.guozhanIsBannedChoice(i)) {
+					return true;
 				}
 			},
 			get.config("onlyguozhanexpand") ? "expandall" : undefined,
@@ -588,6 +611,7 @@ export const chooseCharacterOLContent = async (event, _trigger, _player) => {
 	const characterList = Object.keys(pack).filter(character => {
 		return !character.startsWith("gz_shibing") && !get.is.jun(character) && !banned.includes(character);
 	});
+	characterList.splice(0, characterList.length, ...get.guozhanPrepareChoicePool(characterList));
 	Reflect.set(_status, "characterlist", characterList.slice(0));
 	Reflect.set(_status, "yeidentity", []);
 
@@ -602,8 +626,10 @@ export const chooseCharacterOLContent = async (event, _trigger, _player) => {
 	}
 
 	characterList.randomSort();
+	const choiceHint = get.guozhanChoiceHint();
 	for (const player of game.players) {
-		list2.push([player, ["选择角色", [game.getCharacterChoice(characterList, num), "character"]], 2, true, () => Math.random(), filterButton]);
+		const dialog = choiceHint.length ? ["选择角色", `<div class="text center">${choiceHint.join("<br>")}</div>`, [game.getCharacterChoice(characterList, num), "character"]] : ["选择角色", [game.getCharacterChoice(characterList, num), "character"]];
+		list2.push([player, dialog, 2, true, () => Math.random(), filterButton]);
 	}
 
 	const next = game.me.chooseButtonOL(
